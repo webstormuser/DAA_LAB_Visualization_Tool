@@ -282,19 +282,24 @@ GRAPH-COLORING(G, m)
 
             fig,ax = plt.subplots()
 
-            nx.draw(
-                G,
-                pos,
-                node_color=colors[:i+1],
-                with_labels=True,
-                node_size=1200
-            )
+        node_colors = [
+            colors[j % len(colors)] if j <= i else "lightgray"
+            for j in range(n)
+        ]
 
-            placeholder.pyplot(fig)
+        nx.draw(
+            G,
+            pos,
+            node_color=node_colors,
+            with_labels=True,
+            node_size=1200
+        )
 
-            time.sleep(1)
+        placeholder.pyplot(fig)
 
-        st.success("Coloring Completed")
+        time.sleep(1)
+
+    st.success("Coloring Completed")
 
 
 # =========================================================
