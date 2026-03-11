@@ -204,114 +204,314 @@ with vis_col:
 
         if st.button("Start Visualization"):
 
-         K = [[0]*(W+1) for _ in range(n+1)]
+        # Correct DP table initialization
+            K = [[0 for _ in range(W+1)] for _ in range(n+1)]
 
-        for i in range(1,n+1):
+            for i in range(1, n+1):
 
-            for w in range(1,W+1):
+                for w in range(1, W+1):
 
-                if weights[i-1] <= w:
+                    if weights[i-1] <= w:
 
-                    K[i][w] = max(
-                        values[i-1] + K[i-1][w-weights[i-1]],
-                        K[i-1][w]
-                    )
+                        include = values[i-1] + K[i-1][w-weights[i-1]]
+                        exclude = K[i-1][w]
 
-                else:
-                    K[i][w] = K[i-1][w]
+                        K[i][w] = max(include, exclude)
 
-                fig, ax = plt.subplots(figsize=(6,4))
+                    else:
 
-                table = np.array(K)
+                        K[i][w] = K[i-1][w]
 
-                ax.imshow(table, cmap="Blues")
+                # Visualization
+                    fig, ax = plt.subplots(figsize=(6,4))
 
-                # ADD NUMBERS INSIDE EACH CELL
-                for r in range(n+1):
-                    for c in range(W+1):
+                    table = np.array(K)
 
-                        ax.text(
+                    ax.imshow(table, cmap="Blues")
+
+                    for r in range(n+1):
+                        for c in range(W+1):
+
+                            color = "black"
+
+                            if r == i and c == w:
+                                color = "red"
+
+                            ax.text(
                             c,
                             r,
                             str(table[r][c]),
                             ha="center",
                             va="center",
-                            color="black",
+                            color=color,
                             fontsize=11,
                             fontweight="bold"
                         )
 
-                ax.set_title("DP Table Construction")
+                    ax.set_title("Knapsack DP Table Construction")
+                    ax.set_xlabel("Capacity")
+                    ax.set_ylabel("Items")
 
-                ax.set_xlabel("Capacity")
+                    placeholder.pyplot(fig)
 
-                ax.set_ylabel("Items")
-
-                placeholder.pyplot(fig)
-
-                time.sleep(speed)
+                    time.sleep(speed)
 
         st.success(f"Maximum Profit = {K[n][W]}")
 
 # =====================================================
-# GRAPH COLORING
+# =====================================================
+# GRAPH COLORING (BACKTRACKING)
 # =====================================================
 
     elif menu == "Graph Coloring":
 
-        st.header("Graph Coloring Visualization")
+        st.header("Graph Coloring using Backtracking")
 
-        n=st.slider("Vertices",3,6,4)
+        n = st.slider("Number of Vertices", 3, 12, 5)
+        m = st.slider("Number of Colors", 2, 6, 3)
 
-        G=nx.cycle_graph(n)
+        G = nx.cycle_graph(n)
+        pos = nx.spring_layout(G)
 
-        pos=nx.spring_layout(G)
+        color_palette = ["red","green","blue","yellow","orange","purple"]
 
-        fig,ax=plt.subplots()
+        colors = [-1]*n
 
-        nx.draw(G,pos,with_labels=True,node_color="lightblue")
+        placeholder = st.empty()
 
-        st.pyplot(fig)
+        def is_safe(v, c):
 
+            for neighbor in G.neighbors(v):
+                if colors[neighbor] == c:
+                    return False
+
+            return True
+
+
+        def draw_graph():
+
+            fig, ax = plt.subplots(figsize=(6,4))
+
+            node_colors = []
+
+            for c in colors:
+                if c == -1:
+                    node_colors.append("lightgray")
+                else:
+                    node_colors.append(color_palette[c])
+
+            nx.draw(
+                G,
+                pos,
+                node_color=node_colors,
+                with_labels=True,
+                node_size=1200,
+                edgecolors="black",
+                ax=ax
+            )
+
+            placeholder.pyplot(fig)
+
+
+        def graph_coloring(v):
+
+            if v == n:
+                return True
+
+            for c in range(m):
+
+                if is_safe(v, c):
+
+                    colors[v] = c
+
+                    draw_graph()
+                    time.sleep(speed)
+
+                    if graph_coloring(v+1):
+                        return True
+
+                    # Backtracking
+                    colors[v] = -1
+
+                    draw_graph()
+                    time.sleep(speed)
+
+            return False
+
+
+        if st.button("Start Graph Coloring"):
+
+            draw_graph()
+
+            if graph_coloring(0):
+
+                st.success("Valid Coloring Found")
+
+            else:
+
+                st.error("No Solution Exists with given colors")
 # =====================================================
-# TSP
+# =====================================================
+# =====================================================
+# TSP (User Defined Distance Matrix)
 # =====================================================
 
     elif menu == "Travelling Salesman Problem":
 
         st.header("Travelling Salesman Problem Visualization")
 
-        n=st.slider("Cities",4,7,5)
+        n = st.number_input("Number of Cities", 3, 7, 4)
 
-        cities=np.random.rand(n,2)
+        st.subheader("Enter Distance Matrix")
 
-        fig,ax=plt.subplots()
+        dist_matrix = []
 
-        ax.scatter(cities[:,0],cities[:,1])
+        for i in range(n):
 
-        for i,(x,y) in enumerate(cities):
-            ax.text(x,y,f"C{i}")
+            row = st.text_input(
+                f"Distances from City {i}",
+                " ".join(["0"]*n),
+                key=f"row{i}"
+            )
 
-        st.pyplot(fig)
+            row_values = row.replace(",", " ").split()
+
+            if len(row_values) != n:
+                st.error(f"Row {i} must contain {n} values")
+                st.stop()
+
+            dist_matrix.append(list(map(int,row_values)))
+
+        dist_matrix = np.array(dist_matrix)
+
+        placeholder = st.empty()
+
+        best_cost = float("inf")
+        best_path = None
+
+        if st.button("Start TSP"):
+
+            for perm in itertools.permutations(range(1,n)):
+
+                path = (0,) + perm + (0,)
+
+                cost = 0
+
+                for i in range(len(path)-1):
+
+                    cost += dist_matrix[path[i]][path[i+1]]
+
+                fig, ax = plt.subplots(figsize=(6,4))
+
+                G = nx.complete_graph(n)
+
+                pos = nx.circular_layout(G)
+
+                nx.draw(G,pos,with_labels=True,node_color="lightblue",node_size=1000)
+
+            # draw current path
+                edges = [(path[i],path[i+1]) for i in range(len(path)-1)]
+
+                nx.draw_networkx_edges(
+                    G,
+                    pos,
+                    edgelist=edges,
+                    width=3,
+                    edge_color="orange",
+                    ax=ax
+                )
+
+                ax.set_title(f"Path {path} | Cost = {cost}")
+
+                placeholder.pyplot(fig)
+
+                time.sleep(speed)
+
+                if cost < best_cost:
+
+                    best_cost = cost
+                    best_path = path
+
+        st.success(f"Optimal Path: {best_path}")
+        st.success(f"Minimum Cost: {best_cost}")
 
 # =====================================================
 # JOB SEQUENCING
 # =====================================================
 
+    # =====================================================
+# JOB SEQUENCING WITH DEADLINE
+# =====================================================
+
     elif menu == "Job Sequencing with Deadline":
 
-        st.header("Job Sequencing")
+        st.header("Job Sequencing with Deadline (Greedy Visualization)")
 
-        jobs=["J1","J2","J3","J4","J5"]
-        deadlines=[2,1,2,1,3]
-        profits=[100,19,27,25,15]
+        jobs = ["J1","J2","J3","J4","J5"]
+        deadlines = [2,1,2,1,3]
+        profits = [100,19,27,25,15]
 
         st.table({
-            "Job":jobs,
-            "Deadline":deadlines,
-            "Profit":profits
-        })
+        "Job": jobs,
+        "Deadline": deadlines,
+        "Profit": profits
+     })
 
+        placeholder = st.empty()
+
+        if st.button("Start Scheduling"):
+
+            data = list(zip(jobs, deadlines, profits))
+
+            # sort jobs by profit
+            data.sort(key=lambda x: x[2], reverse=True)
+
+            max_deadline = max(deadlines)
+
+            slots = [None]*max_deadline
+            total_profit = 0
+
+            for job, d, p in data:
+
+                for i in range(min(max_deadline,d)-1,-1,-1):
+
+                    if slots[i] is None:
+
+                        slots[i] = job
+                        total_profit += p
+
+                        break
+
+            # Visualization
+                fig, ax = plt.subplots(figsize=(6,2))
+
+                for idx, s in enumerate(slots):
+
+                    color = "lightgray" if s is None else "green"
+
+                    rect = plt.Rectangle((idx,0),0.8,0.6,color=color)
+
+                    ax.add_patch(rect)
+
+                    text = "-" if s is None else s
+
+                    ax.text(idx+0.4,0.3,text,
+                        ha="center",
+                        va="center",
+                        fontsize=12)
+
+                ax.set_xlim(0,max_deadline)
+                ax.set_ylim(0,1)
+                ax.axis("off")
+
+                ax.set_title(f"Processing Job {job} (Profit {p})")
+
+                placeholder.pyplot(fig)
+
+                time.sleep(speed)
+
+            st.success(f"Final Scheduled Jobs: {slots}")
+            st.success(f"Maximum Profit: {total_profit}")
 # =====================================================
 # MASTER THEOREM
 # =====================================================
