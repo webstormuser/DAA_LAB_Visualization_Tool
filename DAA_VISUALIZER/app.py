@@ -7,7 +7,17 @@ import time
 
 st.set_page_config(layout="wide")
 
-st.title("DAA Algorithm Visualizer")
+# Import algorithms
+from algorithms.insertion_sort import algorithm as ins_algo, time_complexity as ins_time, space_complexity as ins_space
+from algorithms.quicksort import algorithm as quick_algo, time_complexity as quick_time, space_complexity as quick_space
+from algorithms.knapsack import algorithm as knap_algo, time_complexity as knap_time, space_complexity as knap_space
+from algorithms.graph_coloring import algorithm as gc_algo, time_complexity as gc_time, space_complexity as gc_space
+from algorithms.tsp import algorithm as tsp_algo, time_complexity as tsp_time, space_complexity as tsp_space
+from algorithms.job_sequencing import algorithm as job_algo, time_complexity as job_time, space_complexity as job_space
+from algorithms.recurrence_solver import algorithm as rec_algo, time_complexity as rec_time, space_complexity as rec_space
+
+st.title("🚀 Interactive Design & Analysis of Algorithms (DAA) Visualizer Lab")
+st.markdown("### 🎓 Learn Algorithms Through Interactive Visualization")
 
 menu = st.sidebar.selectbox(
     "Select Algorithm",
@@ -16,203 +26,185 @@ menu = st.sidebar.selectbox(
         "Quick Sort",
         "0/1 Knapsack",
         "Graph Coloring",
-        "Travelling Salesman Problem"
+        "Travelling Salesman Problem",
+        "Job Sequencing with Deadline",
+        "Recurrence Relation Solver"
     ]
 )
 
-# =========================================================
+speed = st.sidebar.slider("Animation Speed",0.1,2.0,0.6)
+
+# Layout
+algo_col, vis_col = st.columns([1,2])
+
+# =====================================================
+# LEFT PANEL : ALGORITHM
+# =====================================================
+
+with algo_col:
+
+    st.subheader("Algorithm & Complexity")
+
+    if menu == "Insertion Sort":
+        st.code(ins_algo)
+        st.write("Time Complexity:",ins_time)
+        st.write("Space Complexity:",ins_space)
+
+    elif menu == "Quick Sort":
+        st.code(quick_algo)
+        st.write("Time Complexity:",quick_time)
+        st.write("Space Complexity:",quick_space)
+
+    elif menu == "0/1 Knapsack":
+        st.code(knap_algo)
+        st.write("Time Complexity:",knap_time)
+        st.write("Space Complexity:",knap_space)
+
+    elif menu == "Graph Coloring":
+        st.code(gc_algo)
+        st.write("Time Complexity:",gc_time)
+        st.write("Space Complexity:",gc_space)
+
+    elif menu == "Travelling Salesman Problem":
+        st.code(tsp_algo)
+        st.write("Time Complexity:",tsp_time)
+        st.write("Space Complexity:",tsp_space)
+
+    elif menu == "Job Sequencing with Deadline":
+        st.code(job_algo)
+        st.write("Time Complexity:",job_time)
+        st.write("Space Complexity:",job_space)
+
+    elif menu == "Recurrence Relation Solver":
+        st.code(rec_algo)
+        st.write("Time Complexity:",rec_time)
+        st.write("Space Complexity:",rec_space)
+
+# =====================================================
+# RIGHT PANEL : VISUALIZATION
+# =====================================================
+
+with vis_col:
+
+# =====================================================
 # INSERTION SORT
-# =========================================================
+# =====================================================
 
-if menu == "Insertion Sort":
+    if menu == "Insertion Sort":
 
-    st.header("Insertion Sort")
+        st.header("Insertion Sort Visualization")
 
-    st.subheader("Algorithm")
+        arr_input = st.text_input("Enter numbers","5,2,9,1,6")
 
-    st.code("""
-INSERTION-SORT(A, n)
+        arr = list(map(int,arr_input.split(",")))
 
-1. for i ← 1 to n-1 do
-2.     key ← A[i]
-3.     j ← i - 1
-4.     while j ≥ 0 and A[j] > key do
-5.         A[j+1] ← A[j]
-6.         j ← j - 1
-7.     A[j+1] ← key
-""")
+        placeholder = st.empty()
 
-    st.subheader("Time Complexity")
+        if st.button("Start Sorting"):
 
-    st.table({
-        "Case":["Best","Average","Worst"],
-        "Complexity":["O(n)","O(n²)","O(n²)"]
-    })
+            A = arr.copy()
 
-    st.subheader("Space Complexity")
+            for i in range(1,len(A)):
 
-    st.write("O(1) (In-place sorting)")
+                key = A[i]
+                j = i-1
 
-    arr_input = st.text_input("Enter numbers separated by comma","5,2,9,1,5,6")
+                while j>=0 and A[j] > key:
 
-    arr = list(map(int,arr_input.split(",")))
+                    A[j+1] = A[j]
 
-    placeholder = st.empty()
+                    fig, ax = plt.subplots()
 
-    if st.button("Start Sorting"):
+                    ax.bar(range(len(A)),A,color="skyblue")
 
-        A = arr.copy()
+                    placeholder.pyplot(fig)
 
-        for i in range(1,len(A)):
+                    time.sleep(speed)
 
-            key = A[i]
-            j = i-1
+                    j -= 1
 
-            while j>=0 and A[j]>key:
+                A[j+1] = key
 
-                A[j+1] = A[j]
-                j -= 1
+            st.success(f"Sorted Array: {A}")
 
-                fig,ax = plt.subplots()
-                ax.bar(range(len(A)),A)
-                ax.set_title("Insertion Sort Step")
-
-                placeholder.pyplot(fig)
-                time.sleep(1)
-
-            A[j+1] = key
-
-        st.success("Sorting Completed")
-
-
-# =========================================================
+# =====================================================
 # QUICK SORT
-# =========================================================
+# =====================================================
 
-elif menu == "Quick Sort":
+    elif menu == "Quick Sort":
 
-    st.header("Quick Sort")
+        st.header("Quick Sort Visualization")
 
-    st.subheader("Algorithm")
+        arr_input = st.text_input("Enter numbers","8,3,1,7,0,10,2")
 
-    st.code("""
-QUICKSORT(A, low, high)
+        arr = list(map(int,arr_input.split(",")))
 
-1. if low < high
-2.     p ← PARTITION(A, low, high)
-3.     QUICKSORT(A, low, p-1)
-4.     QUICKSORT(A, p+1, high)
+        chart = st.empty()
 
-PARTITION(A)
+        def draw(A):
 
-1. pivot ← A[high]
-2. i ← low - 1
-3. for j ← low to high-1
-4.     if A[j] ≤ pivot
-5.         i ← i + 1
-6.         swap A[i], A[j]
-7. swap A[i+1], A[high]
-8. return i+1
-""")
+            fig, ax = plt.subplots()
 
-    st.subheader("Time Complexity")
+            bars=ax.bar(range(len(A)),A,color="orange")
 
-    st.table({
-        "Case":["Best","Average","Worst"],
-        "Complexity":["O(n log n)","O(n log n)","O(n²)"]
-    })
+            for i,b in enumerate(bars):
+                ax.text(b.get_x()+b.get_width()/2,b.get_height()+0.2,str(A[i]),ha='center')
 
-    st.subheader("Space Complexity")
+            chart.pyplot(fig)
 
-    st.write("O(log n)")
+        def quicksort(A,l,r):
 
-    arr_input = st.text_input("Enter numbers separated by comma","8,3,1,7,0,10,2")
+            if l>=r:
+                return
 
-    arr = list(map(int,arr_input.split(",")))
+            pivot=r
+            i=l
 
-    chart = st.empty()
+            for j in range(l,r):
 
-    def quicksort(A,l,r):
+                draw(A)
+                time.sleep(speed)
 
-        if l>=r:
-            return
+                if A[j] < A[pivot]:
 
-        pivot = A[r]
-        i=l
+                    A[i],A[j]=A[j],A[i]
+                    i+=1
 
-        for j in range(l,r):
+            A[i],A[pivot]=A[pivot],A[i]
 
-            if A[j] < pivot:
+            quicksort(A,l,i-1)
+            quicksort(A,i+1,r)
 
-                A[i],A[j] = A[j],A[i]
-                i+=1
+        if st.button("Start QuickSort"):
 
-                fig,ax = plt.subplots()
-                ax.bar(range(len(A)),A)
+            A = arr.copy()
 
-                chart.pyplot(fig)
-                time.sleep(1)
+            quicksort(A,0,len(A)-1)
 
-        A[i],A[r] = A[r],A[i]
+            draw(A)
 
-        quicksort(A,l,i-1)
-        quicksort(A,i+1,r)
+            st.success(f"Sorted Array: {A}")
 
-    if st.button("Start QuickSort"):
-
-        A = arr.copy()
-        quicksort(A,0,len(A)-1)
-
-        st.success("Sorting Completed")
-
-
-# =========================================================
+# =====================================================
 # KNAPSACK
-# =========================================================
+# =====================================================
 
-elif menu == "0/1 Knapsack":
+    elif menu == "0/1 Knapsack":
 
-    st.header("0/1 Knapsack Problem")
+        st.header("0/1 Knapsack Visualization")
 
-    st.subheader("Algorithm")
+        weights = list(map(int, st.text_input("Weights", "2,3,4,5").split(",")))
+        values = list(map(int, st.text_input("Values", "3,4,5,6").split(",")))
 
-    st.code("""
-KNAPSACK(W, wt[], val[], n)
+        W = st.number_input("Capacity", 1, 20, 5)
 
-1. Create table K[n+1][W+1]
+        n = len(values)
 
-2. for i ← 0 to n
-3.     for w ← 0 to W
-4.         if i = 0 or w = 0
-5.             K[i][w] ← 0
-6.         else if wt[i-1] ≤ w
-7.             K[i][w] ← max(val[i-1] + K[i-1][w-wt[i-1]], K[i-1][w])
-8.         else
-9.             K[i][w] ← K[i-1][w]
+        placeholder = st.empty()
 
-10. return K[n][W]
-""")
+        if st.button("Start Visualization"):
 
-    st.subheader("Time Complexity")
-
-    st.write("O(n × W)")
-
-    st.subheader("Space Complexity")
-
-    st.write("O(n × W)")
-
-    weights = list(map(int,st.text_input("Weights","2,3,4,5").split(",")))
-    values = list(map(int,st.text_input("Values","3,4,5,6").split(",")))
-
-    W = st.number_input("Capacity",1,20,5)
-
-    n=len(values)
-
-    table=[[0]*(W+1) for _ in range(n+1)]
-
-    placeholder=st.empty()
-
-    if st.button("Run Knapsack"):
+         K = [[0]*(W+1) for _ in range(n+1)]
 
         for i in range(1,n+1):
 
@@ -220,168 +212,121 @@ KNAPSACK(W, wt[], val[], n)
 
                 if weights[i-1] <= w:
 
-                    table[i][w] = max(
-                        values[i-1]+table[i-1][w-weights[i-1]],
-                        table[i-1][w]
+                    K[i][w] = max(
+                        values[i-1] + K[i-1][w-weights[i-1]],
+                        K[i-1][w]
                     )
 
                 else:
+                    K[i][w] = K[i-1][w]
 
-                    table[i][w] = table[i-1][w]
+                fig, ax = plt.subplots(figsize=(6,4))
 
-                placeholder.write(np.array(table))
+                table = np.array(K)
 
-                time.sleep(0.4)
+                ax.imshow(table, cmap="Blues")
 
-        st.success("DP Table Completed")
+                # ADD NUMBERS INSIDE EACH CELL
+                for r in range(n+1):
+                    for c in range(W+1):
 
+                        ax.text(
+                            c,
+                            r,
+                            str(table[r][c]),
+                            ha="center",
+                            va="center",
+                            color="black",
+                            fontsize=11,
+                            fontweight="bold"
+                        )
 
-# =========================================================
+                ax.set_title("DP Table Construction")
+
+                ax.set_xlabel("Capacity")
+
+                ax.set_ylabel("Items")
+
+                placeholder.pyplot(fig)
+
+                time.sleep(speed)
+
+        st.success(f"Maximum Profit = {K[n][W]}")
+
+# =====================================================
 # GRAPH COLORING
-# =========================================================
+# =====================================================
 
-elif menu == "Graph Coloring":
+    elif menu == "Graph Coloring":
 
-    st.header("Graph Coloring (Backtracking)")
+        st.header("Graph Coloring Visualization")
 
-    st.subheader("Algorithm")
+        n=st.slider("Vertices",3,6,4)
 
-    st.code("""
-GRAPH-COLORING(G, m)
+        G=nx.cycle_graph(n)
 
-1. Assign colors to vertices one by one
-2. for each vertex v
-3.     for color c ← 1 to m
-4.         if color c is safe
-5.             assign color c
-6.             recursively color remaining vertices
-7.         if not possible → backtrack
-""")
+        pos=nx.spring_layout(G)
 
-    st.subheader("Time Complexity")
+        fig,ax=plt.subplots()
 
-    st.write("O(m^n)")
+        nx.draw(G,pos,with_labels=True,node_color="lightblue")
 
-    st.subheader("Space Complexity")
+        st.pyplot(fig)
 
-    st.write("O(n)")
-
-    n = st.slider("Number of vertices",3,6,4)
-
-    G = nx.cycle_graph(n)
-
-    pos = nx.spring_layout(G)
-
-    colors = ["red","green","blue","yellow"]
-
-    placeholder = st.empty()
-
-    if st.button("Start Coloring"):
-
-        for i in range(n):
-
-            fig,ax = plt.subplots()
-
-        node_colors = [
-            colors[j % len(colors)] if j <= i else "lightgray"
-            for j in range(n)
-        ]
-
-        nx.draw(
-            G,
-            pos,
-            node_color=node_colors,
-            with_labels=True,
-            node_size=1200
-        )
-
-        placeholder.pyplot(fig)
-
-        time.sleep(1)
-
-    st.success("Coloring Completed")
-
-
-# =========================================================
+# =====================================================
 # TSP
-# =========================================================
+# =====================================================
 
-elif menu == "Travelling Salesman Problem":
+    elif menu == "Travelling Salesman Problem":
 
-    st.header("Travelling Salesman Problem")
+        st.header("Travelling Salesman Problem Visualization")
 
-    st.subheader("Algorithm")
+        n=st.slider("Cities",4,7,5)
 
-    st.code("""
-TSP(G)
+        cities=np.random.rand(n,2)
 
-1. Start from first city
-2. Generate all permutations of remaining cities
-3. Calculate cost of each tour
-4. Select minimum cost path
-""")
+        fig,ax=plt.subplots()
 
-    st.subheader("Time Complexity")
+        ax.scatter(cities[:,0],cities[:,1])
 
-    st.write("O(n!)")
+        for i,(x,y) in enumerate(cities):
+            ax.text(x,y,f"C{i}")
 
-    st.subheader("Space Complexity")
+        st.pyplot(fig)
 
-    st.write("O(n)")
+# =====================================================
+# JOB SEQUENCING
+# =====================================================
 
-    n = st.slider("Number of cities",4,7,5)
+    elif menu == "Job Sequencing with Deadline":
 
-    cities = np.random.rand(n,2)
+        st.header("Job Sequencing")
 
-    fig,ax = plt.subplots()
+        jobs=["J1","J2","J3","J4","J5"]
+        deadlines=[2,1,2,1,3]
+        profits=[100,19,27,25,15]
 
-    ax.scatter(cities[:,0],cities[:,1])
+        st.table({
+            "Job":jobs,
+            "Deadline":deadlines,
+            "Profit":profits
+        })
 
-    for i,(x,y) in enumerate(cities):
-        ax.text(x,y,str(i))
+# =====================================================
+# MASTER THEOREM
+# =====================================================
 
-    st.pyplot(fig)
+    elif menu == "Recurrence Relation Solver":
 
-    best_distance = float("inf")
+        st.header("Master Theorem Solver")
 
-    placeholder = st.empty()
+        a=st.number_input("a",1,10,2)
+        b=st.number_input("b",2,10,2)
 
-    if st.button("Find Optimal Path"):
+        fn=st.selectbox("f(n)",["1","log n","n","n log n","n^2"])
 
-        for perm in itertools.permutations(range(1,n)):
+        if st.button("Solve"):
 
-            path = (0,) + perm + (0,)
+            log_val=np.log(a)/np.log(b)
 
-            dist = 0
-
-            for i in range(len(path)-1):
-
-                dist += np.linalg.norm(
-                    cities[path[i]] - cities[path[i+1]]
-                )
-
-            fig,ax = plt.subplots()
-
-            ax.scatter(cities[:,0],cities[:,1])
-
-            for i,(x,y) in enumerate(cities):
-                ax.text(x,y,str(i))
-
-            for i in range(len(path)-1):
-
-                ax.plot(
-                    [cities[path[i]][0],cities[path[i+1]][0]],
-                    [cities[path[i]][1],cities[path[i+1]][1]]
-                )
-
-            placeholder.pyplot(fig)
-
-            time.sleep(0.5)
-
-            if dist < best_distance:
-
-                best_distance = dist
-                best_path = path
-
-        st.success(f"Optimal Path: {best_path}")
-        st.success(f"Minimum Distance: {best_distance:.2f}")
+            st.write("log_b(a) =",round(log_val,3))
